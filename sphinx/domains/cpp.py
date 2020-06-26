@@ -34,7 +34,8 @@ from sphinx.util.cfamily import (
     NoOldIdError, ASTBaseBase, ASTAttribute, ASTBaseParenExprList,
     verify_description_mode, StringifyTransform,
     BaseParser, DefinitionError, UnsupportedMultiCharacterCharLiteral,
-    identifier_re, anon_identifier_re, integer_literal_re, octal_literal_re,
+    identifier_re, anon_identifier_re, nonanon_identifier_re,
+    integer_literal_re, octal_literal_re,
     hex_literal_re, binary_literal_re, integers_literal_suffix_re,
     float_literal_re, float_literal_suffix_re,
     char_literal_re
@@ -624,11 +625,10 @@ class ASTIdentifier(ASTBase):
             else:
                 signode += addnodes.desc_name(self.identifier, self.identifier)
         elif mode == 'noneIsName':
-            if self.is_anon():
-                signode += nodes.strong(text="[anonymous]")
-            else:
-                signode += nodes.Text(self.identifier)
-        elif mode == 'udl':
+            assert not self.is_anon()
+            signode += nodes.Text(self.identifier)
+        else:
+            assert mode == 'udl'
             # the target is 'operator""id' instead of just 'id'
             assert len(prefix) == 0
             assert len(templateArgs) == 0
@@ -641,8 +641,6 @@ class ASTIdentifier(ASTBase):
             pnode['cpp:parent_key'] = symbol.get_lookup_key()
             pnode += nodes.Text(self.identifier)
             signode += pnode
-        else:
-            raise Exception('Unknown description mode: %s' % mode)
 
 
 class ASTNestedNameElement(ASTBase):
@@ -732,6 +730,7 @@ class ASTNestedName(ASTBase):
         verify_description_mode(mode)
         # just print the name part, with template args, not template params
         if mode == 'noneIsName':
+            assert not self.rooted
             signode += nodes.Text(str(self))
         elif mode == 'param':
             name = str(self)
@@ -5116,7 +5115,7 @@ class DefinitionParser(BaseParser):
                         # don't steal the dot
                         self.pos -= 3
                     else:
-                        name = self._parse_nested_name()
+                        name = self._parse_nested_name(postfixMember=True)
                         postFixes.append(ASTPostfixMember(name))
                         continue
                 if self.skip_string('->'):
@@ -5124,7 +5123,7 @@ class DefinitionParser(BaseParser):
                         # don't steal the arrow
                         self.pos -= 3
                     else:
-                        name = self._parse_nested_name()
+                        name = self._parse_nested_name(postfixMember=True)
                         postFixes.append(ASTPostfixMemberOfPointer(name))
                         continue
                 if self.skip_string('++'):
@@ -5513,13 +5512,13 @@ class DefinitionParser(BaseParser):
                 assert not packExpansion
         return ASTTemplateArgs(templateArgs, packExpansion)
 
-    def _parse_nested_name(self, memberPointer: bool = False) -> ASTNestedName:
+    def _parse_nested_name(self, memberPointer: bool = False, postfixMember: bool = False) -> ASTNestedName:
         names = []  # type: List[ASTNestedNameElement]
         templates = []  # type: List[bool]
 
         self.skip_ws()
         rooted = False
-        if self.skip_string('::'):
+        if not postfixMember and self.skip_string('::'):
             rooted = True
         while 1:
             self.skip_ws()
@@ -5532,11 +5531,15 @@ class DefinitionParser(BaseParser):
             if self.skip_word_and_ws('operator'):
                 identOrOp = self._parse_operator()
             else:
-                if not self.match(identifier_re):
-                    if memberPointer and len(names) > 0:
-                        templates.pop()
-                        break
-                    self.fail("Expected identifier in nested name.")
+                if postfixMember:
+                    if not self.match(nonanon_identifier_re):
+                        self.fail("Expected (non-anonymous) identifier in nested name.")
+                else:
+                    if not self.match(identifier_re):
+                        if memberPointer and len(names) > 0:
+                            templates.pop()
+                            break
+                        self.fail("Expected identifier in nested name.")
                 identifier = self.matched_text
                 # make sure there isn't a keyword
                 if identifier in _keywords:
@@ -5558,6 +5561,8 @@ class DefinitionParser(BaseParser):
             if not self.skip_string('::'):
                 if memberPointer:
                     self.fail("Expected '::' in pointer to member (function).")
+                break
+            if postfixMember:
                 break
         return ASTNestedName(names, templates, rooted)
 

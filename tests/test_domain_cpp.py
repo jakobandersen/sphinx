@@ -133,6 +133,17 @@ def test_fundamental_types():
 
 
 def test_expressions():
+    class Config:
+        cpp_id_attributes = ["id_attr"]
+        cpp_paren_attributes = ["paren_attr"]
+
+    def fail(expr):
+        with pytest.raises(DefinitionError):
+            parser = DefinitionParser(expr, location=None,
+                                      config=Config())
+            parser.allowFallbackExpressionParsing = False
+            parser.parse_expression()
+
     def exprCheck(expr, id, id4=None):
         ids = 'IE1CIA%s_1aE'
         # call .format() on the expr to unescape double curly braces
@@ -140,10 +151,6 @@ def test_expressions():
         if id4 is not None:
             idDict[4] = ids % id4
         check('class', 'template<> {key}C<a[%s]>' % expr, idDict)
-
-        class Config:
-            cpp_id_attributes = ["id_attr"]
-            cpp_paren_attributes = ["paren_attr"]
 
         parser = DefinitionParser(expr, location=None,
                                   config=Config())
@@ -342,6 +349,13 @@ def test_expressions():
     # pack expansion
     exprCheck('a(b(c, 1 + d...)..., e(f..., g))', 'cl1aspcl1b1cspplL1E1dEcl1esp1f1gEE')
 
+    fail('a.::b')
+    fail('a.b::c')
+    fail('a.@b')
+    fail('a->::b')
+    fail('a->b::c')
+    fail('a->@b')
+
 
 def test_type_definitions():
     check("type", "public bool b", {1: "b", 2: "1b"}, "{key}bool b", key='typedef')
@@ -429,6 +443,13 @@ def test_member_definitions():
 
 
 def test_function_definitions():
+    with pytest.raises(DefinitionError):
+        parse('function', 'void f(int ::a')
+    with pytest.raises(DefinitionError):
+        parse('function', 'void f(int a::b')
+    with pytest.raises(DefinitionError):
+        parse('function', 'void f(int @a')
+
     check('function', 'void f(volatile int)', {1: "f__iV", 2: "1fVi"})
     check('function', 'void f(std::size_t)', {1: "f__std::s", 2: "1fNSt6size_tE"})
     check('function', 'operator bool() const', {1: "castto-b-operatorC", 2: "NKcvbEv"})

@@ -29,6 +29,10 @@ StringifyTransform = Callable[[Any], str]
 
 _whitespace_re = re.compile(r'(?u)\s+')
 anon_identifier_re = re.compile(r'(@[a-zA-Z0-9_])[a-zA-Z0-9_]*\b')
+nonanon_identifier_re = re.compile(r'''(?x)
+    (~?\b[a-zA-Z_])  # ordinary identifiers
+    [a-zA-Z0-9_]*\b
+''')
 identifier_re = re.compile(r'''(?x)
     (   # This 'extends' _anon_identifier_re with the ordinary identifiers,
         # make sure they are in sync.
