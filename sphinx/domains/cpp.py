@@ -681,10 +681,6 @@ class ASTNestedName(ASTBase):
         assert len(self.names) == len(self.templates)
         self.rooted = rooted
 
-    @property
-    def name(self) -> "ASTNestedName":
-        return self
-
     def num_templates(self) -> int:
         count = 0
         for n in self.names:
@@ -735,7 +731,8 @@ class ASTNestedName(ASTBase):
         elif mode == 'param':
             name = str(self)
             signode += nodes.emphasis(name, name)
-        elif mode == 'markType' or mode == 'lastIsName' or mode == 'markName':
+        else:
+            assert mode in ('markType', 'lastIsName', 'markName')
             # Each element should be a pending xref targeting the complete
             # prefix. however, only the identifier part should be a link, such
             # that template args can be a link as well.
@@ -787,8 +784,6 @@ class ASTNestedName(ASTBase):
                 if self.templates[-1]:
                     signode += nodes.Text("template ")
                 self.names[-1].describe_signature(signode, mode, env, '', symbol)
-        else:
-            raise Exception('Unknown description mode: %s' % mode)
 
 
 ################################################################################
@@ -1610,9 +1605,6 @@ class ASTOperatorBuildIn(ASTOperator):
                 raise NoOldIdError()
         else:
             ids = _id_operator_v2
-        if self.op not in ids:
-            raise Exception('Internal error: Build-in operator "%s" can not '
-                            'be mapped to an id.' % self.op)
         return ids[self.op]
 
     def _stringify(self, transform: StringifyTransform) -> str:
@@ -1750,12 +1742,6 @@ class ASTTrailingTypeSpecFundamental(ASTTrailingTypeSpec):
                 else:
                     res.append(a)
             return '-'.join(res)
-
-        if self.name not in _id_fundamental_v2:
-            raise Exception(
-                'Semi-internal error: Fundamental type "%s" can not be mapped '
-                'to an id. Is it a true fundamental type? If not so, the '
-                'parser should have rejected it.' % self.name)
         return _id_fundamental_v2[self.name]
 
     def describe_signature(self, signode: TextElement, mode: str,
@@ -1800,10 +1786,6 @@ class ASTTrailingTypeSpecName(ASTTrailingTypeSpec):
     def __init__(self, prefix: str, nestedName: ASTNestedName) -> None:
         self.prefix = prefix
         self.nestedName = nestedName
-
-    @property
-    def name(self) -> ASTNestedName:
-        return self.nestedName
 
     def get_id(self, version: int) -> str:
         return self.nestedName.get_id(version)
@@ -2118,8 +2100,7 @@ class ASTDeclSpecs(ASTBase):
             res.append(transform(self.trailingTypeSpec))
             r = str(self.rightSpecs)
             if len(r) > 0:
-                if len(res) > 0:
-                    res.append(" ")
+                res.append(" ")
                 res.append(r)
         return "".join(res)
 
@@ -2246,9 +2227,9 @@ class ASTDeclaratorNameParamQual(ASTDeclarator):
     # only the modifiers for a function, e.g.,
     def get_modifiers_id(self, version: int) -> str:
         # cv-qualifiers
-        if self.paramQual:
-            return self.paramQual.get_modifiers_id(version)
-        raise Exception("This should only be called on a function: %s" % self)
+        # this should only be called on a function
+        assert self.paramQual is not None
+        return self.paramQual.get_modifiers_id(version)
 
     def get_param_id(self, version: int) -> str:  # only the parameters (if any)
         if self.paramQual:

@@ -633,6 +633,8 @@ def test_function_definitions():
     # from breathe#441
     check('function', 'auto MakeThingy() -> Thingy*', {1: 'MakeThingy', 2: '10MakeThingyv'})
 
+    check('function', 'void f(decltype(A) i)', {2: '1fDT1AE'})
+
 
 def test_operators():
     check('function', 'void operator new()', {1: "new-operator", 2: "nwv"})
