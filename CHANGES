@@ -126,6 +126,8 @@ Features added
 Bugs fixed
 ----------
 
+* C, ``expr`` role should start symbol lookup in the current scope.
+
 Testing
 --------
 
