@@ -294,21 +294,25 @@ var Documentation = {
       if (activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT'
           && activeElementType !== 'BUTTON' && !event.altKey && !event.ctrlKey && !event.metaKey
           && !event.shiftKey) {
-        switch (event.keyCode) {
-          case 37: // left
+        switch (event.key) {
+          case 'ArrowLeft':
             var prevHref = $('link[rel="prev"]').prop('href');
             if (prevHref) {
               window.location.href = prevHref;
               return false;
             }
-            break;
-          case 39: // right
+          case 'ArrowRight':
             var nextHref = $('link[rel="next"]').prop('href');
             if (nextHref) {
               window.location.href = nextHref;
               return false;
             }
-            break;
+          case '/':
+            $('input[name=q]').first().focus();
+            return false;
+          case 'Escape':
+            Documentation.hideSearchWords();
+            return false;
         }
       }
     });
