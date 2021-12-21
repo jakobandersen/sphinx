@@ -17,7 +17,7 @@ from sphinx.deprecation import RemovedInSphinx50Warning
 from sphinx.directives import ObjectDescription
 from sphinx.domains import Domain, ObjType
 from sphinx.locale import _, __
-from sphinx.roles import XRefRole
+from sphinx.roles import EmphasizedLiteral, XRefRole
 from sphinx.util import docname_join, logging, ws_re
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import clean_astext, make_id, make_refnode
@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 option_desc_re = re.compile(r'((?:/|--|-|\+)?[^\s=]+)(=?\s*.*)')
 # RE for grammar tokens
 token_re = re.compile(r'`((~?\w*:)?\w+)`', re.U)
+
+samp_role = EmphasizedLiteral()
 
 
 class GenericObject(ObjectDescription[str]):
@@ -194,7 +196,19 @@ class Cmdoption(ObjectDescription[str]):
             if count:
                 signode += addnodes.desc_addname(', ', ', ')
             signode += addnodes.desc_name(optname, optname)
-            signode += addnodes.desc_addname(args, args)
+            if self.env.config.option_parse_variable_part:
+                for part in samp_role.parse(args):
+                    if isinstance(part, nodes.Text):
+                        text = part.astext()
+                        if not text.strip():
+                            signode += addnodes.desc_sig_space()
+                        else:
+                            # in order to preserve whitespaces, call desc_addname
+                            signode += addnodes.desc_addname(text, text)
+                    else:
+                        signode += part
+            else:
+                signode += addnodes.desc_addname(args, args)
             if not count:
                 firstname = optname
                 signode['allnames'] = [optname]

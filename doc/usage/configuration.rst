@@ -700,6 +700,14 @@ General configuration
 
     .. versionadded:: 3.0
 
+.. confval:: option_parse_variable_part
+
+   Default is ``False``.
+   Similarly to ``samp`` role, support parsing of "variable part" of a literal text.
+   For example, in ``..option: -foption={TYPE}``,
+   the part ``TYPE`` would be emphasized.
+
+   .. versionadded:: 4.5
 
 .. _intl-options:
 
