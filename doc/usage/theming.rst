@@ -163,10 +163,18 @@ These themes are:
 
     - :kbd:`Left arrow`: previous page
     - :kbd:`Right arrow`: next page
-    - :kbd:`/`: jump to Quick search
-    - :kbd:`Esc`: hide search matches
 
     Defaults to ``False``.
+
+  - **search_with_keys** (true or false): Allow jumping to the search box
+    with :kbd:`/`.
+
+    Defaults to ``True``.
+
+  - **remove_highlight_with_keys** (true or false): Allow removal of search
+    highlighting with :kbd:`Esc`.
+
+    Defaults to ``True``.
 
   - **globaltoc_collapse** (true or false): Only expand subsections
     of the current document in ``globaltoc.html``

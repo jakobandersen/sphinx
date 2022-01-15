@@ -8,5 +8,7 @@ var DOCUMENTATION_OPTIONS = {
     LINK_SUFFIX: '{{ link_suffix }}',
     HAS_SOURCE: {{ has_source|lower }},
     SOURCELINK_SUFFIX: '{{ sourcelink_suffix }}',
-    NAVIGATION_WITH_KEYS: {{ 'true' if theme_navigation_with_keys|tobool else 'false'}}
+    NAVIGATION_WITH_KEYS: {{ 'true' if theme_navigation_with_keys|tobool else 'false'}},
+    SEARCH_WITH_KEYS: {{ 'true' if theme_search_with_keys|tobool else 'true'}},
+    REMOVE_HIGHLIGHT_WITH_KEYS: {{ 'true' if theme_remove_highlight_with_keys|tobool else 'true'}}
 };
