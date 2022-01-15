@@ -321,7 +321,8 @@ var Documentation = {
               Documentation.hideSearchWords();
               return false;
           }
-        } else if (!event.altKey && !event.ctrlKey && !event.metaKey) {
+        }
+        if (!event.altKey && !event.ctrlKey && !event.metaKey) {
           // some keyboard layouts need Shift to get /
           switch (event.key) {
             case '/':
