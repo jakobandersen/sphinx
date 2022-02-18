@@ -3983,6 +3983,8 @@ class ASTDeclaration(ASTBase):
         # set by CPPObject._add_enumerator_to_parent
         self.enumeratorScopedSymbol: Symbol = None
 
+        self._newest_id: Optional[str] = None  # memoization
+
     def clone(self) -> "ASTDeclaration":
         templatePrefixClone = self.templatePrefix.clone() if self.templatePrefix else None
         trailingRequiresClasueClone = self.trailingRequiresClause.clone() \
@@ -4048,7 +4050,9 @@ class ASTDeclaration(ASTBase):
         return ''.join(res)
 
     def get_newest_id(self) -> str:
-        return self.get_id(_max_id, True)
+        if self._newest_id is None:
+            self._newest_id = self.get_id(_max_id, True)
+        return self._newest_id
 
     def _stringify(self, transform: StringifyTransform) -> str:
         res = []
