@@ -595,6 +595,10 @@ class ASTIdentifier(ASTBase):
         assert len(identifier) != 0
         self.identifier = identifier
 
+    def __eq__(self, other: Any) -> bool:
+        # specialized for speed
+        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier
+
     def is_anon(self) -> bool:
         return self.identifier[0] == '@'
 
@@ -1673,6 +1677,10 @@ class ASTFallbackExpr(ASTExpression):
 ################################################################################
 
 class ASTOperator(ASTBase):
+    def __eq__(self, other: Any) -> bool:
+        # must be specialized for speed
+        raise NotImplementedError(repr(self))
+
     def is_anon(self) -> bool:
         return False
 
@@ -1721,6 +1729,10 @@ class ASTOperatorBuildIn(ASTOperator):
     def __init__(self, op: str) -> None:
         self.op = op
 
+    def __eq__(self, other: Any) -> bool:
+        # specialized for speed
+        return isinstance(other, ASTOperatorBuildIn) and self.op == other.op
+
     def get_id(self, version: int) -> str:
         if version == 1:
             ids = _id_operator_v1
@@ -1751,6 +1763,10 @@ class ASTOperatorLiteral(ASTOperator):
     def __init__(self, identifier: ASTIdentifier) -> None:
         self.identifier = identifier
 
+    def __eq__(self, other: Any) -> bool:
+        # specialized for speed
+        return isinstance(other, ASTOperatorLiteral) and self.identifier == other.identifier
+
     def get_id(self, version: int) -> str:
         if version == 1:
             raise NoOldIdError()
@@ -1770,6 +1786,10 @@ class ASTOperatorLiteral(ASTOperator):
 class ASTOperatorType(ASTOperator):
     def __init__(self, type: "ASTType") -> None:
         self.type = type
+
+    def __eq__(self, other: Any) -> bool:
+        # specialized for speed
+        return isinstance(other, ASTOperatorType) and self.type == other.type
 
     def get_id(self, version: int) -> str:
         if version == 1:
