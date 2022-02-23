@@ -3535,27 +3535,7 @@ class ASTEnumerator(ASTBase):
 # Parameters
 ################################################################################
 
-class ASTTemplateParam(ASTBase):
-    def get_identifier(self) -> ASTIdentifier:
-        raise NotImplementedError(repr(self))
-
-    def get_id(self, version: int) -> str:
-        raise NotImplementedError(repr(self))
-
-    def describe_signature(self, parentNode: TextElement, mode: str,
-                           env: "BuildEnvironment", symbol: "Symbol") -> None:
-        raise NotImplementedError(repr(self))
-
-    @property
-    def isPack(self) -> bool:
-        raise NotImplementedError(repr(self))
-
-    @property
-    def name(self) -> ASTNestedName:
-        raise NotImplementedError(repr(self))
-
-
-class ASTTemplateKeyParamPackIdDefault(ASTTemplateParam):
+class ASTTemplateKeyParamPackIdDefault(ASTBase):
     def __init__(self, key: str, identifier: ASTIdentifier,
                  parameterPack: bool, default: ASTType) -> None:
         assert key
@@ -3610,6 +3590,26 @@ class ASTTemplateKeyParamPackIdDefault(ASTTemplateParam):
             signode += addnodes.desc_sig_punctuation('=', '=')
             signode += addnodes.desc_sig_space()
             self.default.describe_signature(signode, 'markType', env, symbol)
+
+
+class ASTTemplateParam(ASTBase):
+    @property
+    def name(self) -> ASTNestedName:
+        raise NotImplementedError(repr(self))
+
+    @property
+    def isPack(self) -> bool:
+        raise NotImplementedError(repr(self))
+
+    def get_identifier(self) -> ASTIdentifier:
+        raise NotImplementedError(repr(self))
+
+    def get_id(self, version: int) -> str:
+        raise NotImplementedError(repr(self))
+
+    def describe_signature(self, parentNode: TextElement, mode: str,
+                           env: "BuildEnvironment", symbol: "Symbol") -> None:
+        raise NotImplementedError(repr(self))
 
 
 class ASTTemplateParamType(ASTTemplateParam):
@@ -4418,7 +4418,8 @@ class Symbol:
         return ASTNestedName(names, templates, rooted=False)
 
     def _find_first_named_symbol(self, identOrOp: Union[ASTIdentifier, ASTOperator],
-                                 templateParams: Any, templateArgs: ASTTemplateArgs,
+                                 templateParams: Union[ASTTemplateParams, ASTTemplateIntroduction],
+                                 templateArgs: ASTTemplateArgs,
                                  templateShorthand: bool, matchSelf: bool,
                                  recurseInAnon: bool, correctPrimaryTemplateArgs: bool
                                  ) -> "Symbol":
@@ -4434,7 +4435,8 @@ class Symbol:
             return None
 
     def _find_named_symbols(self, identOrOp: Union[ASTIdentifier, ASTOperator],
-                            templateParams: Any, templateArgs: ASTTemplateArgs,
+                            templateParams: Union[ASTTemplateParams, ASTTemplateIntroduction],
+                            templateArgs: ASTTemplateArgs,
                             templateShorthand: bool, matchSelf: bool,
                             recurseInAnon: bool, correctPrimaryTemplateArgs: bool,
                             searchInSiblings: bool) -> Iterator["Symbol"]:
