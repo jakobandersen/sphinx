@@ -4040,6 +4040,12 @@ class LookupKey:
                                         str]]) -> None:
         self.data = data
 
+    def __str__(self) -> str:
+        res = []
+        for k in self.data:
+            res.append('({}, {}, {})'.format(*k))
+        return '[{}]'.format(', '.join(res))
+
 
 class Symbol:
     debug_indent = 0
@@ -7811,7 +7817,7 @@ class CPPDomain(Domain):
             parentSymbol: Symbol = rootSymbol.direct_lookup(parentKey)
             if not parentSymbol:
                 print("Target: ", target)
-                print("ParentKey: ", parentKey.data)
+                print("ParentKey: ", parentKey)
                 print(rootSymbol.dump(1))
             assert parentSymbol  # should be there
         else:
