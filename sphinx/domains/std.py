@@ -188,25 +188,38 @@ class Cmdoption(ObjectDescription[str]):
                                location=signode)
                 continue
             optname, args = m.groups()
-            if optname.endswith('[') and args.endswith(']'):
+            if optname[-1] == '[' and args[-1] == ']':
                 # optional value surrounded by brackets (ex. foo[=bar])
                 optname = optname[:-1]
                 args = '[' + args
 
             if count:
-                signode += addnodes.desc_addname(', ', ', ')
+                if self.env.config.option_parse_variable_part:
+                    signode += addnodes.desc_sig_punctuation(',', ',')
+                    signode += addnodes.desc_sig_space()
+                else:
+                    signode += addnodes.desc_addname(', ', ', ')
             signode += addnodes.desc_name(optname, optname)
             if self.env.config.option_parse_variable_part:
+                add_end_bracket = False
+                if args[0] == '[' and args[-1] == ']':
+                    add_end_bracket = True
+                    signode += addnodes.desc_sig_punctuation('[', '[')
+                    args = args[1:-1]
+                if args[0] == ' ':
+                    signode += addnodes.desc_sig_space()
+                    args = args.strip()
+                if args[0] == '=':
+                    signode += addnodes.desc_sig_punctuation('=', '=')
+                    args = args[1:]
                 for part in samp_role.parse(args):
                     if isinstance(part, nodes.Text):
                         text = part.astext()
-                        if not text.strip():
-                            signode += addnodes.desc_sig_space()
-                        else:
-                            # in order to preserve whitespaces, call desc_addname
-                            signode += addnodes.desc_addname(text, text)
+                        signode += nodes.Text(text, text)
                     else:
                         signode += part
+                if add_end_bracket:
+                    signode += addnodes.desc_sig_punctuation(']', ']')
             else:
                 signode += addnodes.desc_addname(args, args)
             if not count:
